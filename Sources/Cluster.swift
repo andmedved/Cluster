@@ -45,6 +45,11 @@ open class ClusterManager {
     open var shouldRemoveInvisibleAnnotations: Bool = true
     
     /**
+     Whether to replace annotations on same location.
+     */
+    open var shouldReplaceAnnotationsWithSameLocation: Bool = true
+    
+    /**
      The position of the cluster annotation.
      */
     public enum ClusterPosition {
@@ -227,14 +232,9 @@ open class ClusterManager {
                     hash[node.coordinate, default: [MKAnnotation]()] += [node]
                 }
                 
-                // handle annotations on the same coordinate
-                for value in hash.values where value.count > 1 {
-                    for (index, node) in value.enumerated() {
-                        let distanceFromContestedLocation = 3 * Double(value.count) / 2
-                        let radiansBetweenAnnotations = (.pi * 2) / Double(value.count)
-                        let bearing = radiansBetweenAnnotations * Double(index)
-                        (node as? Annotation)?.coordinate = node.coordinate.coordinate(onBearingInRadians: bearing, atDistanceInMeters: distanceFromContestedLocation)
-                    }
+                if shouldReplaceAnnotationsWithSameLocation {
+                    // handle annotations on the same coordinate
+                    replaceAnnotationsWithSameLocation(hash: hash)
                 }
                 
                 // handle clustering
@@ -293,6 +293,17 @@ open class ClusterManager {
         mapView.addAnnotations(toAdd)
     }
     
+    func replaceAnnotationsWithSameLocation(hash: [CLLocationCoordinate2D: [MKAnnotation]]) {
+        // handle annotations on the same coordinate
+        for value in hash.values where value.count > 1 {
+            for (index, node) in value.enumerated() {
+                let distanceFromContestedLocation = 3 * Double(value.count) / 2
+                let radiansBetweenAnnotations = (.pi * 2) / Double(value.count)
+                let bearing = radiansBetweenAnnotations * Double(index)
+                (node as? Annotation)?.coordinate = node.coordinate.coordinate(onBearingInRadians: bearing, atDistanceInMeters: distanceFromContestedLocation)
+            }
+        }
+    }
 }
 
 //public class MKBasePolyline: MKPolyline {}
