@@ -293,6 +293,21 @@ open class ClusterManager {
         mapView.addAnnotations(toAdd)
     }
     
+    /**
+     Reset the annotations to refresh annotation views.
+     
+     - Parameters:
+     - mapView: The map view object that contains annotations.
+     - annotations: Annotations that should be refreshed(annotation views will reload).
+     */
+    open func reset(mapView: MKMapView, annotations: [MKAnnotation]) {
+        assert(Thread.isMainThread, "This function must be called from the main thread.")
+        mapView.removeAnnotations(annotations)
+        mapView.addAnnotations(annotations)
+        visibleAnnotations.subtract(annotations)
+        visibleAnnotations.add(annotations)
+    }
+    
     func replaceAnnotationsWithSameLocation(hash: [CLLocationCoordinate2D: [MKAnnotation]]) {
         // handle annotations on the same coordinate
         for value in hash.values where value.count > 1 {
